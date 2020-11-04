@@ -25,6 +25,8 @@
 */
 
 // modified by YoungTaek Oh.
+// modified by Thomas Cann. 
+
 #define PY_SSIZE_T_CLEAN
 
 #ifdef WIN32
