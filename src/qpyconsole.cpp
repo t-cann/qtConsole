@@ -227,7 +227,7 @@ QPyConsole *QPyConsole::getInstance(QWidget *parent, const QString& welcomeText)
     return theInstance;
 }
 
-//QTcl console constructor (init the QTextEdit & the attributes)
+//QT Python console constructor (init the QTextEdit & the attributes)
 QPyConsole::QPyConsole(QWidget *parent, const QString& welcomeText) :
         QConsole(parent, welcomeText),lines(0)
 {

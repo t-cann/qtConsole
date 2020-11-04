@@ -9,7 +9,7 @@ add_executable(${This} ${Sources})
 
 target_link_libraries(${This} PUBLIC
     GTest::Main
-    # pyConsole
+    lib-qpyconsole
 )
 
 add_test(
@@ -26,7 +26,7 @@ add_executable(${This} ${Sources})
 
 target_link_libraries(${This} PUBLIC
     GTest::Main
-    # pyConsole
+    lib-qconsole
 )
 
 add_test(
