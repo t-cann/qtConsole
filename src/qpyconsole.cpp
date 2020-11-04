@@ -25,12 +25,14 @@
 */
 
 // modified by YoungTaek Oh.
+#define PY_SSIZE_T_CLEAN
 
 #ifdef WIN32
 #   undef _DEBUG
 #endif
 #include <Python.h>
 #include "qpyconsole.h"
+#include "structmember.h"
 
 #include <QDebug>
 
@@ -49,8 +51,8 @@ static PyObject* redirector_write(PyObject *, PyObject *args)
 {
     char* output;
     PyObject *selfi;
-
-    if (!PyArg_ParseTuple(args,"Os",&selfi,&output))
+ 
+    if (!PyArg_ParseTuple(args,"s",&output))
     {
         return NULL;
     }
@@ -69,6 +71,68 @@ static PyMethodDef redirectorMethods[] =
      "implement the write method to redirect stdout/err"},
     {NULL,NULL,0,NULL},
 };
+
+typedef struct{
+    PyObject_HEAD
+} RedirectorObject;
+
+static void Redirector_dealloc (RedirectorObject * self){
+    Py_TYPE(self)->tp_free((PyObject *) self);
+}
+
+static PyObject* Redirector_new(PyTypeObject *type, PyObject *args, PyObject *kwds){
+    RedirectorObject *self;
+    self = (RedirectorObject *) type->tp_alloc(type, 0);
+    return (PyObject *)self;
+}
+
+static int Redirector_init(RedirectorObject *self, PyObject *args, PyObject *kwds)
+{
+    return 0;
+}
+
+static PyTypeObject RedirectorObject_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "redirector.redirector",
+    .tp_basicsize = sizeof(RedirectorObject),
+    .tp_itemsize = 0,
+    .tp_dealloc = (destructor) Redirector_dealloc,
+    .tp_flags = Py_TPFLAGS_DEFAULT| Py_TPFLAGS_BASETYPE,
+    .tp_doc = "redirector objects",
+    .tp_methods = redirectorMethods,
+    .tp_init = (initproc) Redirector_init,
+    .tp_new = Redirector_new,
+    
+};
+
+static PyMethodDef ModuleMethods[] = { 
+    {NULL,NULL,0,NULL} 
+};
+
+static struct PyModuleDef redirector_moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "redirector",
+    "Module to Redirect Stdout", //description
+    -1,
+    ModuleMethods //
+};
+
+PyMODINIT_FUNC PyInit_redirector(void){
+    PyObject * m;
+    if(PyType_Ready(&RedirectorObject_Type)< 0){
+        return NULL;
+    }
+    m = PyModule_Create(&redirector_moduledef);
+    if(m==NULL){
+        return NULL;
+    }
+    if (PyModule_AddObject(m, "redirector", (PyObject *) &RedirectorObject_Type) < 0) {
+        Py_DECREF(&RedirectorObject_Type);
+        Py_DECREF(m);
+        return NULL;
+    }
+    return m;
+}
 
 static PyObject* py_clear(PyObject *, PyObject *)
 {
@@ -117,7 +181,6 @@ static PyObject* py_quit(PyObject *, PyObject *)
     return Py_None;
 }
 
-static PyMethodDef ModuleMethods[] = { {NULL,NULL,0,NULL} };
 static PyMethodDef console_methods[] =  {
     {"clear",py_clear, METH_VARARGS,"clears the console"},
     {"reset",py_reset, METH_VARARGS,"reset the interpreter and clear the console"},
@@ -125,33 +188,20 @@ static PyMethodDef console_methods[] =  {
     {"load",py_load, METH_VARARGS,"load commands from given file"},
     {"history",py_history, METH_VARARGS,"shows the history"},
     {"quit",py_quit, METH_VARARGS,"print information about quitting"},
-
     {NULL, NULL,0,NULL}
 };
 
-void initredirector()
-{
-    PyMethodDef *def;
+static struct PyModuleDef console_moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "console",
+    "Methods to Operate the Console", //description
+    -1,
+    console_methods
+};
 
-    /* create a new module and class */
-    PyObject *module = Py_InitModule("redirector", ModuleMethods);
-    PyObject *moduleDict = PyModule_GetDict(module);
-    PyObject *classDict = PyDict_New();
-    PyObject *className = PyString_FromString("redirector");
-    PyObject *fooClass = PyClass_New(NULL, classDict, className);
-    PyDict_SetItemString(moduleDict, "redirector", fooClass);
-    Py_DECREF(classDict);
-    Py_DECREF(className);
-    Py_DECREF(fooClass);
-
-    /* add methods to class */
-    for (def = redirectorMethods; def->ml_name != NULL; def++) {
-        PyObject *func = PyCFunction_New(def, NULL);
-        PyObject *method = PyMethod_New(func, NULL, fooClass);
-        PyDict_SetItemString(classDict, def->ml_name, method);
-        Py_DECREF(func);
-        Py_DECREF(method);
-    }
+PyMODINIT_FUNC PyInit_console(void){
+    PyObject * m = PyModule_Create(&console_moduledef);
+    return m;
 }
 
 void QPyConsole::printHistory()
@@ -181,7 +231,8 @@ QPyConsole::QPyConsole(QWidget *parent, const QString& welcomeText) :
 {
     //set the Python Prompt
     setNormalPrompt(true);
-
+    PyImport_AppendInittab("redirector", PyInit_redirector);
+    PyImport_AppendInittab("console", PyInit_console);
     Py_Initialize();
     /* NOTE: In previous implementaion, local name and global name
              were allocated separately.  And it causes a problem that
@@ -191,29 +242,19 @@ QPyConsole::QPyConsole(QWidget *parent, const QString& welcomeText) :
     */
     PyObject *module = PyImport_ImportModule("__main__");
     loc = glb = PyModule_GetDict(module);
-
-    initredirector();
-
-    PyImport_AddModule("console");
-    Py_InitModule("console", console_methods);
+    
+    PyImport_ImportModule("redirector");
+    PyImport_ImportModule("console");
 
     PyImport_ImportModule("rlcompleter");
     PyRun_SimpleString("import sys\n"
                        "import redirector\n"
-                       "import console\n"
-                       "import rlcompleter\n"
+                       "from console import *\n"
+                       "from rlcompleter import Completer as completer\n"
                        "sys.path.insert(0, \".\")\n" // add current
                                                      // path
                        "sys.stdout = redirector.redirector()\n"
                        "sys.stderr = sys.stdout\n"
-                       "import __builtin__\n"
-                       "__builtin__.clear=console.clear\n"
-                       "__builtin__.reset=console.reset\n"
-                       "__builtin__.save=console.save\n"
-                       "__builtin__.load=console.load\n"
-                       "__builtin__.history=console.history\n"
-                       "__builtin__.quit=console.quit\n"
-                       "__builtin__.completer=rlcompleter.Completer()\n"
         );
 }
 char save_error_type[1024], save_error_info[1024];
@@ -228,11 +269,14 @@ QPyConsole::py_check_for_unexpected_eof()
 
     pystring = NULL;
     if (errobj != NULL &&
-        (pystring = PyObject_Str(errobj)) != NULL &&     /* str(object) */
-        (PyString_Check(pystring))
+        (pystring = PyObject_Str(errobj)) != NULL &&     /* str(object) */  // what is difference between str and repr in python?
+         (PyUnicode_Check(pystring))
         )
     {
-        strcpy(save_error_type, PyString_AsString(pystring));
+        PyObject* pStrObj = PyUnicode_AsUTF8String(pystring);
+        const char* str = PyBytes_AsString(pStrObj);
+        strcpy(save_error_type, str);
+        Py_DECREF(pStrObj);
     }
     else
         strcpy(save_error_type, "<unknown exception type>");
@@ -241,9 +285,14 @@ QPyConsole::py_check_for_unexpected_eof()
     pystring = NULL;
     if (errdata != NULL &&
         (pystring = PyObject_Str(errdata)) != NULL &&
-        (PyString_Check(pystring))
+        (PyUnicode_Check(pystring))
         )
-        strcpy(save_error_info, PyString_AsString(pystring));
+        {
+        PyObject* pStrObj = PyUnicode_AsUTF8String(pystring);
+        const char* str = PyBytes_AsString(pStrObj);
+        strcpy(save_error_info, str);
+        Py_DECREF(pStrObj);
+        }
     else
         strcpy(save_error_info, "<unknown exception data>");
     Py_XDECREF(pystring);
@@ -315,7 +364,7 @@ QString QPyConsole::interpretCommand(const QString &command, int *res)
             this->command="";
             this->lines=0;
 
-            dum = PyEval_EvalCode ((PyCodeObject *)py_result, glb, loc);
+            dum = PyEval_EvalCode(py_result, glb, loc);
             Py_XDECREF (dum);
             Py_XDECREF (py_result);
             if (PyErr_Occurred ())
@@ -355,10 +404,10 @@ QStringList QPyConsole::suggestCommand(const QString &cmd, QString& prefix)
     resultString="";
     if (!cmd.isEmpty()) {
         do {
-            snprintf(run,255,"print completer.complete(\"%s\",%d)\n",
-                     cmd.toAscii().data(),n);
+            qInfo() <<   cmd.toLatin1().data() << n ; 
+            snprintf(run, 255, "print( completer.complete(\"%s\" , %d ) )\n", cmd.toLatin1().data(),n);
             PyRun_SimpleString(run);
-            resultString=resultString.trimmed(); //strip trialing newline
+            resultString=resultString.trimmed(); //strip trialing newline //resultString does not work until redirector/catcher does.
             if (resultString!="None")
             {
                 list.append(resultString);
