@@ -252,7 +252,8 @@ QPyConsole::QPyConsole(QWidget *parent, const QString& welcomeText) :
     PyRun_SimpleString("import sys\n"
                        "import redirector\n"
                        "from console import *\n"
-                       "from rlcompleter import Completer as completer\n"
+                       "import rlcompleter\n"
+                       "completer = rlcompleter.Completer()\n"
                        "sys.path.insert(0, \".\")\n" // add current
                                                      // path
                        "sys.stdout = redirector.redirector()\n"
@@ -406,16 +407,13 @@ QStringList QPyConsole::suggestCommand(const QString &cmd, QString& prefix)
     resultString="";
     if (!cmd.isEmpty()) {
         do {
-            qInfo() <<   cmd.toLatin1().data() << n ; 
-            snprintf(run, 255, "print( completer.complete(\"%s\" , %d ) )\n", cmd.toLatin1().data(),n);
+            snprintf(run, 255, "print(completer.complete(\"%s\" , %d ))\n", cmd.toLatin1().data(),n);
             PyRun_SimpleString(run);
             resultString=resultString.trimmed(); //strip trialing newline //resultString does not work until redirector/catcher does.
-            if (resultString!="None")
-            {
+            if (resultString!="None"){
                 list.append(resultString);
                 resultString="";
-            }
-            else
+            }else 
             {
                 resultString="";
                 break;
