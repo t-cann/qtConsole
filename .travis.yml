@@ -5,12 +5,14 @@ dist: bionic
 
 language: cpp
 
+python:
+  - "3.8"
+
 addons:
   apt:
     packages:
       - googletest
       - qtbase5-dev
-      - python3
 
 
 before_script:
