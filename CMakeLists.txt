@@ -11,12 +11,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-enable_testing()
-find_package(GTest)
-#add_subdirectory(googletest) #https://www.eriksmistad.no/getting-started-with-google-test-on-ubuntu/
+option(Testing_enabled "Build testing" OFF)
 
 # find_package(Python2 COMPONENTS Interpreter Development)
-find_package(Python3 COMPONENTS Interpreter Development NumPy)
+find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
 
 # https://cmake.org/cmake/help/latest/manual/cmake-qt.7.html
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
@@ -25,11 +23,13 @@ find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
 
 set(Headers
+  include/mainwindow.h
   include/qconsole.h
   include/qpyconsole.h
 )
 set(Sources
   src/pymain.cpp
+  src/mainwindow.cpp
   src/qconsole.cpp
   src/qpyconsole.cpp
 )
@@ -63,5 +63,9 @@ target_link_libraries(qtpyConsole
   Qt5::Widgets
 )
 
+if(Testing_enabled)
+  enable_testing()
+  #add_subdirectory(googletest) #https://www.eriksmistad.no/getting-started-with-google-test-on-ubuntu/
+  add_subdirectory(test)
+endif()
 
-add_subdirectory(test)
