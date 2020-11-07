@@ -13,12 +13,11 @@ addons:
     packages:
       - googletest
       - qtbase5-dev
+      - cmake
 
 
 before_script:
 
-  # Getting Numpy
-  - pip install numpy
   # Build and install Google Test
   - mkdir gtest-build
   - cd gtest-build
