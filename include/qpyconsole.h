@@ -56,7 +56,7 @@ protected:
     //execute a validated command
     QString interpretCommand(const QString &command, int *res);
 
-    void setNormalPrompt(bool display) { setPrompt(">>", display); }
+    void setNormalPrompt(bool display) { setPrompt(">>>", display); }
     void setMultilinePrompt(bool display) { setPrompt("...", display); }
 
 private:
