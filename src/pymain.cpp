@@ -16,8 +16,8 @@
  ***************************************************************************/
 
 #include <qapplication.h>
-#include <qmainwindow.h>
-#include "qpyconsole.h"
+#include "mainwindow.h"
+
 
 /* Define the following to fix __ctype_* from GLIBC2.3 and upper
    if not compiled using the same GLIBC */
@@ -46,12 +46,12 @@ int main( int argc, char ** argv )
     QApplication a( argc, argv );
 
     //Create and show the main window
-    QMainWindow mw;
-    mw.setMinimumSize(640, 480);
+    MainWindow mw;
+    // mw.setMinimumSize(640, 480);
     //Instantiate and set the focus to the QPyConsole
-    QPyConsole *console = QPyConsole::getInstance(&mw,"Welcome to my python Console");
-    mw.setFocusProxy((QWidget*)console);
-    mw.setCentralWidget((QWidget*)console);
+    // QPyConsole *console = QPyConsole::getInstance(&mw,"Welcome to my python Console");
+    // mw.setFocusProxy((QWidget*)console);
+    // mw.setCentralWidget((QWidget*)console);
     mw.show();
                     
     return a.exec();
