@@ -18,7 +18,7 @@ addons:
 before_script:
 
   # Getting Numpy
-  - pip3 install numpy
+  - pip install numpy
   # Build and install Google Test
   - mkdir gtest-build
   - cd gtest-build
