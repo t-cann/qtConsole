@@ -10,9 +10,14 @@ addons:
     packages:
       - googletest
       - qtbase5-dev
+      - python3
+
 
 before_script:
-   # Build and install Google Test
+
+  # Getting Numpy
+  - pip3 install numpy
+  # Build and install Google Test
   - mkdir gtest-build
   - cd gtest-build
   - >
