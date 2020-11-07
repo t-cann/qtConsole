@@ -1,7 +1,7 @@
 # .travis.yml
 
 os: linux
-dist: bionic
+dist: focal
 
 language: cpp
 
@@ -13,11 +13,10 @@ addons:
     packages:
       - googletest
       - qtbase5-dev
-      - cmake
 
 
 before_script:
-
+  - cmake --version
   # Build and install Google Test
   - mkdir gtest-build
   - cd gtest-build
