@@ -9,6 +9,7 @@ addons:
   apt:
     packages:
       - googletest
+      - qtbase5-dev
 
 before_script:
    # Build and install Google Test
