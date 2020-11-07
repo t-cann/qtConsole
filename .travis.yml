@@ -28,10 +28,11 @@ install:
   # Replace dep1 dep2 ... with your dependencies
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy
   - conda activate test-environment
-  - python setup.py install
+  # - python setup.py install
 
 before_script:
   - cmake --version
+  # - pip install numpy
   # Build and install Google Test
   - mkdir gtest-build
   - cd gtest-build
