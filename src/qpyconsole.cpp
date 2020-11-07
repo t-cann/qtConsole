@@ -183,6 +183,13 @@ static PyObject* py_quit(PyObject *, PyObject *)
     return Py_None;
 }
 
+static PyObject* py_version(PyObject *, PyObject *)
+{
+    PyRun_SimpleString("print(\"Python \" + sys.version + \" on \" + sys.platform)\n");
+    return Py_None;
+}
+
+
 static PyMethodDef console_methods[] =  {
     {"clear",py_clear, METH_VARARGS,"clears the console"},
     {"reset",py_reset, METH_VARARGS,"reset the interpreter and clear the console"},
@@ -190,6 +197,7 @@ static PyMethodDef console_methods[] =  {
     {"load",py_load, METH_VARARGS,"load commands from given file"},
     {"history",py_history, METH_VARARGS,"shows the history"},
     {"quit",py_quit, METH_VARARGS,"print information about quitting"},
+    {"version",py_version, METH_VARARGS,"print information about versions of python, system and compilers"},
     {NULL, NULL,0,NULL}
 };
 
@@ -258,6 +266,8 @@ QPyConsole::QPyConsole(QWidget *parent, const QString& welcomeText) :
                                                      // path
                        "sys.stdout = redirector.redirector()\n"
                        "sys.stderr = sys.stdout\n"
+                    //    "print(\"Python \" + sys.version + \" on \" + sys.platform)\n"
+                       
         );
 }
 char save_error_type[1024], save_error_info[1024];
@@ -328,8 +338,26 @@ QString QPyConsole::interpretCommand(const QString &command, int *res)
     PyObject* dum;
     bool multiline=false;
     *res = 0;
-    if (!command.startsWith('#') && (!command.isEmpty() || (command.isEmpty() && lines!=0)))
+    if (!command.startsWith('#') && (!command.isEmpty() || (command.isEmpty() && lines!=0) ))
     {
+
+        if(command.contains("license()", Qt::CaseInsensitive)){
+            QString result = "WARNING: Can't type LICENSE() as Interactive Prompt Disabled. \nPlease find full license online.";
+            return result;
+        }
+        if(command.contains("help()", Qt::CaseInsensitive)){
+            QString result = 
+            "Console Methods include:\n"
+            "clear() - clears the console\n"
+            "reset() - reset the interpreter and clear the console\n"
+            "save() - save commands up to now in given file\n"
+            "load() - load commands from given file\n" 
+            "history() - shows the history\n" 
+            "quit() - print information about quitting\n" 
+            "version() - print information about versions of python, system and compilers\n"             
+            ;
+            return result;
+        }
         this->command.append(command);
         py_result=Py_CompileString(this->command.toLocal8Bit().data(),"<stdin>",Py_single_input);
         if (py_result==0)
