@@ -342,7 +342,7 @@ QString QPyConsole::interpretCommand(const QString &command, int *res)
     {
 
         if(command.contains("license()", Qt::CaseInsensitive)){
-            QString result = "WARNING: Can't type LICENSE() as Interactive Prompt Disabled. \nPlease find full license online.";
+            QString result = "WARNING: Can't type LICENSE() as Interactive Prompt is Disabled. \nPlease find full license online.";
             return result;
         }
         if(command.contains("help()", Qt::CaseInsensitive)){
