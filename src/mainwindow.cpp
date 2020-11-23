@@ -71,16 +71,12 @@ void MainWindow::createDockWindows(){
     
     QWidget *window = new QWidget;
     window->setMinimumSize(320, 240);
-    QPyConsole* console = QPyConsole::getInstance(window,"Type \"help()\" for more information");
+    QPyConsole* console = QPyConsole::getInstance(window,"Type \"help()\" for more information:");
     QVBoxLayout *layout = new QVBoxLayout();
     layout->setSpacing(0);
     layout->setContentsMargins(0, 0, 0, 0);
     window->setLayout(layout);
-
     layout->addWidget(console);
-
-    // window->setFocusProxy((QWidget*)console);
-    // window->s  ((QWidget*)console);
     dock->setWidget(window);
     this->addDockWidget(Qt::BottomDockWidgetArea, dock);
 
